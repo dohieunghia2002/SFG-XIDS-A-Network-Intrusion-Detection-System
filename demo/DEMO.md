@@ -1,5 +1,13 @@
 # Kịch bản quay clip demo SFG-XIDS
 
+Hai phần: **phần A — NSL-KDD** (4 phút) và **phần B — UNSW-NB15** (3 phút). Quay riêng hai
+clip, hoặc ghép thành một clip 7 phút. Phần B không lặp lại phần A: nó cho thấy mô hình
+hành xử thế nào trên bài toán 10 lớp khó hơn nhiều, kể cả chỗ nó thất bại.
+
+---
+
+# PHẦN A — NSL-KDD (5 lớp)
+
 Clip khoảng **4 phút**, chạy trên NSL-KDD, seed 0, nền 128 luồng, 16 nút tích phân — đúng cấu
 hình mặc định của app. Mọi con số trong file này tôi đã chạy và ghi lại trước; nếu lúc quay màn
 hình hiện khác, dừng lại kiểm tra chứ đừng quay tiếp.
@@ -214,3 +222,155 @@ demo/DEMO.md       <- file này
 **Muốn mp4 phát được ngay trong README:** kéo thả file mp4 vào ô soạn một Issue bất kỳ của repo,
 GitHub trả về một link `user-images.githubusercontent.com`; dán link đó vào README là clip phát
 inline. Không cần commit mp4 vào repo. Cách này gọn hơn, nhất là nếu clip trên 25 MB.
+
+
+---
+
+# PHẦN B — UNSW-NB15 (10 lớp)
+
+Chuyển **Bộ dữ liệu → UNSW-NB15 (10 lớp)** ở thanh bên. Lần đổi đầu mất 20–40 giây để nạp và
+tính macro-F1 trên 82.332 luồng test — chạy trước một lượt rồi mới quay.
+
+Phần này **không** phải bản sao của phần A. Nó cho thấy ba thứ mà NSL-KDD không cho thấy được:
+mô hình xử lý 10 lớp mất cân bằng nặng ra sao, lời giải thích phơi bày artefact của bộ dữ liệu như
+thế nào, và mô hình nhầm ở đâu.
+
+## B1 · Mở đầu — bài toán khó hơn hẳn (0:00 – 0:30)
+
+**Thanh bên phải hiện:**
+
+```
+Thiết bị cpu · σ = 10 · nền 128 luồng
+Macro-F1 test 54.00% · 185,374 tham số
+Kiểm tra tiền xử lý: lệch tối đa 4.77e-07
+```
+
+**Thoại:** "Cùng kiến trúc đó, giờ chạy trên UNSW-NB15: 10 lớp tấn công thay vì 5, 82 nghìn luồng
+test. Macro-F1 tụt từ 65,5% xuống 54%. Đây là bộ dữ liệu khó, và tôi sẽ cho thấy khó ở chỗ nào."
+
+> σ hiện là **10**, khác phần A (σ = 1). Đó là giá trị chọn trên validation riêng cho bộ này, không
+> phải lỗi.
+
+## B2 · Giám sát theo lô (0:30 – 1:10)
+
+Số luồng **500** · Chỉ lấy nhãn thật **(tất cả)** · Seed lấy mẫu **0** → **▶ Chạy tầng 1**
+
+| Chỉ số | Giá trị |
+| --- | --- |
+| Luồng đã xử lý | 500 |
+| Bị gắn cảnh báo | **343 — 68,6% của lô** |
+| Thông lượng tầng 1 | ~900–1.700 luồng/s |
+| Đúng nhãn thật | **74,2%** (macro-F1 lô 48,3%) |
+
+**Thoại:** "Gần 69% lô bị gắn cảnh báo — vì tập test UNSW-NB15 có tỷ lệ tấn công cao hơn hẳn
+NSL-KDD. Thông lượng tầng 1 không đổi dù số lớp gấp đôi: vẫn dưới một mili-giây mỗi luồng."
+
+Chỉ vào biểu đồ **Nhóm đặc trưng chi phối quyết định**.
+
+**Thoại:** "Ở bộ này nhóm Additional — các đặc trưng đếm được tạo thêm — chi phối nhiều hơn hẳn so
+với NSL-KDD. Lát nữa sẽ thấy vì sao, và đó không hẳn là tin tốt."
+
+## B3 · Ba ca điển hình (1:10 – 2:20)
+
+Chuyển **Điều tra một luồng → Từ tập test**.
+
+### Dòng 445 — Reconnaissance, nhóm Time dẫn dắt
+
+| | |
+| --- | --- |
+| Dự đoán | **Reconnaissance**, xác suất **100,0%** (nhãn thật đúng) |
+| φ | Basic +4,53 · Content +4,38 · **Time +5,04** · Additional +2,48 |
+| Ba đặc trưng đầu | `sinpkt = 90.91` → **+1,289**<br>`djit = 147.13` → +1,018<br>`sjit = 6157.30` → +1,012 |
+
+**Thoại:** "Quét mạng. Nhóm Time dẫn dắt, và mở ra thì thấy toàn là đặc trưng về nhịp gói tin —
+khoảng cách giữa các gói, độ rung. Đúng dấu vết của công cụ quét tự động: gửi đều đặn theo máy chứ
+không theo nhịp người dùng."
+
+### Dòng 65292 — Shellcode, nhóm Content dẫn dắt
+
+| | |
+| --- | --- |
+| Dự đoán | **Shellcode**, xác suất **98,6%** (nhãn thật đúng) |
+| φ | Basic +2,87 · **Content +4,10** · Time +0,37 · Additional +1,87 |
+| Ba đặc trưng đầu | `smean = 88.0` → **+2,476**<br>`dmean = 0.0` → +0,843<br>`dwin = 0.0` → +0,332 |
+
+**Thoại:** "Shellcode — mã khai thác nhúng trong gói tin. Ở đây nhóm Content dẫn dắt, và đặc trưng
+mạnh nhất là kích thước gói trung bình chiều đi: 88 byte, trong khi chiều về bằng 0. Một payload
+nhỏ gửi đi, không có phản hồi. Nhóm Time gần như không đóng góp gì — hợp lý, vì đây là chuyện nội
+dung chứ không phải nhịp lưu lượng."
+
+### Dòng 15356 — Generic, và lời giải thích phơi bày một artefact
+
+| | |
+| --- | --- |
+| Dự đoán | **Generic**, xác suất **99,9%** (nhãn thật đúng) |
+| φ | Basic +2,25 · Content +2,03 · Time +0,92 · **Additional +2,46** |
+| Ba đặc trưng đầu | `ct_state_ttl = 2.0` → **+0,584**<br>`ct_src_dport_ltm = 43.0` → +0,428<br>`ct_srv_dst = 43.0` → +0,325 |
+
+**Đây là cảnh đáng giá nhất của phần B.**
+
+**Thoại:** "Lớp Generic mô hình nhận gần như tuyệt đối — F1 98,5%. Nhưng nhìn vào đặc trưng mạnh
+nhất: `ct_state_ttl`, một đặc trưng dẫn xuất từ Time-To-Live. TTL là thuộc tính của môi trường tạo
+dữ liệu, không phải của hành vi tấn công. Lời giải thích đang nói với chúng ta rằng mô hình dựa
+vào một artefact của bộ dữ liệu — và đó chính là lý do trong bài báo chúng tôi có một thí nghiệm
+riêng, bỏ hẳn ba đặc trưng TTL ra và đo lại. Một mô hình chỉ đưa ra con số độ chính xác sẽ không
+bao giờ để lộ điều này."
+
+> Nối thẳng với ablation A5 trong `sfg_results/summary.json`. Nếu anh muốn mạnh hơn nữa, mở
+> **dòng 82330** (Normal, xác suất 100%): đặc trưng `is_sm_ips_ports = 1.0` một mình đóng góp
+> **+4,956**, tức IP nguồn trùng IP đích và cổng trùng cổng — một artefact còn thô hơn.
+
+## B4 · Chỗ mô hình thất bại (2:20 – 3:00)
+
+### Dòng 62785 — Exploits bị gọi thành Shellcode
+
+| | |
+| --- | --- |
+| Nhãn thật | **Exploits** |
+| Dự đoán | **Shellcode**, xác suất **97,4%** |
+| φ | **Basic +3,63** · Content +1,89 · Time +2,62 · Additional +1,17 |
+| Ba đặc trưng đầu | `service = -` → **+1,461**<br>`dttl = 252.0` → +0,467<br>`state = FIN` → +0,393 |
+
+**Thoại:** "Và đây là chỗ mô hình sai. Luồng này là Exploits nhưng bị gọi thành Shellcode với 97%
+tự tin. Đặc trưng mạnh nhất là `service` không xác định được — đúng là thứ hai lớp này chia chung.
+Exploits và Shellcode vốn chồng lấn về bản chất: shellcode thường là một phần của exploit."
+
+**Nói thẳng con số, đừng né** — mở lại chế độ theo lô, chỉ vào biểu đồ chia theo lớp:
+
+**Thoại:** "Trên mẫu 500 luồng này, F1 từng lớp rất chênh: Generic 98,5%, Reconnaissance 87,5%,
+Normal 80,6%, Exploits 67,8% — nhưng Analysis và Worms bằng 0, Backdoor 6,2%. Macro-F1 54% là
+trung bình của những con số đó. Bốn lớp hiếm nhất gần như không học được, vì tập train có quá ít
+mẫu và chúng chồng lấn với Exploits. Đó là hạn chế thật của công trình này, và lời giải thích theo
+nhóm giúp nhìn ra nguyên nhân chứ không chỉ báo rằng có vấn đề."
+
+## B5 · Chốt (3:00 – 3:20)
+
+**Thoại:** "Cùng một kiến trúc, hai bộ dữ liệu, hai câu chuyện. NSL-KDD: lời giải thích tái hiện
+đúng kết luận kinh điển của Lee và Stolfo. UNSW-NB15: lời giải thích chỉ ra mô hình đang dựa vào
+artefact TTL, và chỉ ra bốn lớp hiếm không học được. Cả hai điều đó đều rút ra được vì φ là giá
+trị Shapley chính xác theo cấu trúc, sai số cỡ một phần triệu — không phải một ước lượng xấp xỉ
+mà ta phải tin."
+
+---
+
+## Bảng các dòng đã kiểm chứng (UNSW-NB15, seed 0)
+
+| Dòng | Nhãn thật | Dự đoán | Xác suất | Nhóm mạnh nhất | Ghi chú |
+| --- | --- | --- | --- | --- | --- |
+| 445 | Reconnaissance | Reconnaissance | 1,000 | Time +5,04 | nhịp gói tin, `sinpkt` |
+| 6464 | Reconnaissance | Reconnaissance | 1,000 | Content +4,61 | dự phòng |
+| 65292 | Shellcode | Shellcode | 0,986 | Content +4,10 | `smean = 88` |
+| 15356 | Generic | Generic | 0,999 | Additional +2,46 | **artefact `ct_state_ttl`** |
+| 82330 | Normal | Normal | 1,000 | Additional +4,99 | **artefact `is_sm_ips_ports` +4,96** |
+| 278 | Exploits | Exploits | 1,000 | Additional +3,25 | `ct_state_ttl` +1,187 |
+| 11918 | DoS | DoS | 0,958 | Basic +2,59 | lớp F1 chỉ 42% |
+| 61746 | Fuzzers | Fuzzers | 0,994 | Basic +3,40 | |
+| 62785 | Exploits | **Shellcode** | 0,974 | Basic +3,63 | sai — `service = -` |
+| 11410 | Exploits | **Analysis** | 0,944 | Content +2,78 | sai — dự phòng |
+| 822 | Exploits | **Backdoor** | 0,937 | Additional +4,84 | sai — Additional áp đảo |
+| 80987 | Normal | **Analysis** | 0,994 | Content +2,73 | báo động giả |
+
+**F1 từng lớp trên mẫu 3.000 luồng** (để anh biết lớp nào đáng quay): Generic 98,5 · Reconnaissance
+87,5 · Normal 80,6 · Exploits 67,8 · Shellcode 42,9 · DoS 42,4 · Fuzzers 37,5 · Backdoor 6,2 ·
+Analysis 0,0 · Worms 0,0. Đừng quay Analysis hay Worms — mô hình không nhận được lớp nào trong
+hai lớp đó, và mẫu 3.000 luồng không có luồng Worms nào.

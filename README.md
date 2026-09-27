@@ -54,7 +54,9 @@ whichever direction they went.
 
 ## Demo application
 
-![demo](demo/demo.gif)
+https://github.com/user-attachments/assets/4a4cb8d4-7c09-4e99-b225-ccb8cc36ef88
+
+*Five minutes, unscripted: the flows are drawn at random from the test set, repeatedly, so nothing is cherry-picked. A copy is in [demo/demo.mp4](demo/demo.mp4). A scripted walkthrough with the exact test rows and the values each should produce is in [demo/DEMO.md](demo/DEMO.md).*
 
 `app/app_sfg_xids.py` is a Streamlit app that loads the trained checkpoints and runs for real on
 every flow — nothing in the interface is precomputed. Two modes:
@@ -117,7 +119,8 @@ app/
     data/                  datasets go here (git-ignored)
 sfg_results/               metrics, group profiles, interaction heat maps, per-class F1
 demo/                      DEMO.md walkthrough and the recorded clip
-docs/                      full report (PDF) and the detailed protocol
+SFG_final.pdf              full report
+results.xlsx               result tables
 run_code_in_colab.ipynb    Colab driver for re-running the experiments on a T4
 ```
 

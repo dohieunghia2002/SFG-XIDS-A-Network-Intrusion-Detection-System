@@ -33,12 +33,19 @@ p2_quick/
 # --- tai lieu ban quyen ben thu ba ---
 References/
 
+# --- ban nhap bao cao: chi giu SFG_final.pdf tren repo ---
+/Bao_cao_chi_tiet_de_taiSFG.pdf
+/bao_cao_chi_tiet_SFG_XIDS.docx
+/de_cuong_chi_tiet_SFG_XIDS_v3.md
+/SFG1.docx
+
 # --- ban sao ma nguon o thu muc goc (ban chinh nam trong app/modules/) ---
 /step0_sfg.py
 /full_sfg.py
 /phase2_sfg.py
 /step0_unsw.py
 
-# --- file tam khi quay clip ---
+# --- file tam khi quay clip: ban goc .webm 64 MB, chi day ban .mp4 da nen ---
 demo/raw/
 *.mkv
+*.webm
