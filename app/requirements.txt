@@ -1,0 +1,27 @@
+# SFG-XIDS demo — app_sfg_xids.py
+#
+# Ghim đúng bộ phiên bản đã chạy kiểm thử đầy đủ (Python 3.10, Windows 64-bit).
+# Cả 6 gói đều có sẵn wheel cp310-win_amd64, không phải biên dịch gì.
+#
+#   cd D:\data_fusion\app
+#   rmdir /s /q venv
+#   python -m venv venv
+#   venv\Scripts\activate
+#   pip install -r requirements.txt
+#   streamlit run app_sfg_xids.py
+#
+# torch trên Windows lấy từ PyPI vốn là bản CPU (các gói CUDA chỉ gắn cho Linux),
+# nên không cần --index-url gì thêm. Tải về khoảng 250 MB.
+
+streamlit==1.64.0
+torch==2.14.0
+numpy==2.2.6
+pandas==2.3.3
+scikit-learn==1.7.2
+pyarrow==25.0.1
+
+# KHÔNG cần xgboost. step0_unsw.py import nó ngay khi nạp, nhưng app chỉ dùng phần đọc dữ
+# liệu UNSW-NB15 của file đó, nên khi thiếu xgboost app tự thay bằng một module rỗng — đã
+# kiểm: có hay không có xgboost, macro-F1 UNSW-NB15 đều ra 54,00%.
+# Chỉ cài nếu muốn chạy lại phần huấn luyện trong modules\:
+#   pip install xgboost lightgbm kagglehub

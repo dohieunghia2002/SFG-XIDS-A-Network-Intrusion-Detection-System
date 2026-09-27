@@ -1,0 +1,44 @@
+# --- moi truong ---
+venv/
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.streamlit/secrets.toml
+.DS_Store
+Thumbs.db
+
+# --- du lieu: cong khai nhung theo dieu khoan rieng, khong day len repo ---
+app/data/*
+!app/data/.gitkeep
+*.csv.gz
+KDDTrain+.txt
+KDDTest+.txt
+UNSW_NB15_*.csv
+UNSW-NB15_*.csv
+NUSW-NB15_*.csv
+
+# --- checkpoint qua lon hoac khong dung cho demo ---
+# giu: app/models/{nsl,unsw}_sfg_tax_*.pt   (7,5 MB, app can)
+sfg_results/full_v1/models/
+*.ubj
+
+# --- ket qua cu, da bi thay the boi sfg_results/ ---
+step0_v4/
+step0_v4_nottl/
+sfg_step0/
+full_quick/
+p2_quick/
+
+# --- tai lieu ban quyen ben thu ba ---
+References/
+
+# --- ban sao ma nguon o thu muc goc (ban chinh nam trong app/modules/) ---
+/step0_sfg.py
+/full_sfg.py
+/phase2_sfg.py
+/step0_unsw.py
+
+# --- file tam khi quay clip ---
+demo/raw/
+*.mkv
